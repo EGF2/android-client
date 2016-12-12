@@ -1,0 +1,50 @@
+buildscript {
+    ext.kotlin_version = '1.0.5-2'
+    ext.support = '25.0.1'
+    ext.retrofit = '2.1.0'
+    ext.rxjava = '1.2.3'
+    ext.rxandroid = '1.2.1'
+    ext.okhttp = '3.5.0'
+    ext.gson = '2.8.0'
+    ext.javapoet = '1.8.0'
+    ext.anko = '0.9'
+    ext.rxbinding = '1.0.0'
+
+    ext.buildToolsVersion = "25.0.1"
+    ext.compileVersion = 25
+    ext.minSdk = 16
+    ext.targetSdk = 25
+    ext.versionCode = 1
+    ext.versionName = "1.0.0"
+    ext.group = "com.eigengraph.egf2"
+
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            url uri('repo')
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.2.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+        classpath 'com.eigengraph.egf2:gradle-plugin:1.0'
+        classpath "io.realm:realm-gradle-plugin:2.2.1"
+        classpath "com.github.ben-manes:gradle-versions-plugin:0.13.0"
+
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
