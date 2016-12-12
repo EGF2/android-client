@@ -1,0 +1,120 @@
+apply plugin: 'groovy'
+apply plugin: 'nexus'
+apply plugin: 'com.github.ben-manes.versions'
+
+def cfg = rootProject.ext
+
+group = cfg.group
+version = cfg.versionName
+
+ext {
+    bintrayRepo = 'egf2-android-client'
+    bintrayName = 'gradle-plugin'
+
+    publishedGroupId = cfg.group
+    libraryName = 'EFG2 gradle plugin'
+    artifact = 'gradle-plugin'
+
+    libraryDescription = 'Android client library for EGF2 framework'
+
+    siteUrl = 'https://github.com/EGF2/android-client'
+    gitUrl = 'https://github.com/EGF2/android-client.git'
+    githubRepository = 'EGF2/android-client'
+
+    libraryVersion = cfg.versionName
+
+    developerId = 'alexxxdev'
+    developerName = 'Alexey Derendyaev'
+    developerEmail = 'derendyaev@eigengraph.com'
+
+    licenseName = 'MIT License'
+    licenseUrl = 'https://github.com/EGF2/android-client/blob/master/LICENSE'
+    allLicenses = ["MIT"]
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.3'
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url uri('../repo')
+    }
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile "com.eigengraph.egf2:egf2-generator:$versionName"
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Graph plugin',
+                'Implementation-Version': version,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Built-Gradle': gradle.gradleVersion
+    }
+}
+
+task groovydocJar(type: Jar, dependsOn: groovydoc) {
+    classifier = 'javadoc'
+    from groovydoc.destinationDir
+}
+
+artifacts {
+    archives groovydocJar
+}
+
+modifyPom {
+    project {
+        name 'Gradle Graph plugin'
+        description 'Graph for Gradle.'
+        url ''
+        inceptionYear '2016'
+
+        licenses {
+            license {
+                name 'The Apache Software License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                distribution 'repo'
+            }
+        }
+
+        developers {
+            developer {
+                id 'alexxxdev'
+                name 'Alexey Derendyaev'
+                email 'alexxxdev@gmail.com'
+            }
+        }
+    }
+}
+
+task wrapper(type: Wrapper, description: 'Generates the com.eigengraph.egf2.gradle wrapper.') {
+    gradleVersion = '2.14.1'
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('../repo'))
+        }
+    }
+}
+
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
+}
+
+apply from: '../install.gradle'
+apply from: '../bintray.gradle'

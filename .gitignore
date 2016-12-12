@@ -1,0 +1,12 @@
+*.iml
+.com.eigengraph.egf.gradle
+/local.properties
+/.idea/*
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+/.gradle/*
+/repo/*
+/schema/*
+/app
