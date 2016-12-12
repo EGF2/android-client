@@ -47,7 +47,7 @@ internal class EGF2GraphApi : EGF2Api() {
 						val obj = Gson().fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObject(id, obj, param["expand"] as String?)
-						EGF2Bus.postObject(EGF2Bus.EVENT.OBJECT_UPDATED, id, obj)
+						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_UPDATED, id, obj)
 					} else {
 						requestSubject.onError(onError(it))
 					}
@@ -74,9 +74,9 @@ internal class EGF2GraphApi : EGF2Api() {
 						}
 						val after = param["after"]
 						if (after == null) {
-							EGF2Bus.postEdge(EGF2Bus.EVENT.EDGE_PAGE_LOADED, id, edge, e)
+							EGF2Bus.post(EGF2Bus.EVENT.EDGE_PAGE_LOADED, id, edge, e)
 						} else {
-							EGF2Bus.postEdge(EGF2Bus.EVENT.EDGE_REFRESHED, id, edge, e)
+							EGF2Bus.post(EGF2Bus.EVENT.EDGE_REFRESHED, id, edge, e)
 						}
 					} else {
 						requestSubject.onError(onErrorEdge(it))
@@ -99,7 +99,7 @@ internal class EGF2GraphApi : EGF2Api() {
 						val obj = Gson().fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObject(obj.getId(), obj, null)
-						EGF2Bus.postObject(EGF2Bus.EVENT.OBJECT_UPDATED, idDst, obj)
+						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_UPDATED, idDst, obj)
 					} else {
 						requestSubject.onError(onError(it))
 					}
@@ -121,7 +121,7 @@ internal class EGF2GraphApi : EGF2Api() {
 						val obj = Gson().fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObject(obj.getId(), obj, null)
-						EGF2Bus.postObject(EGF2Bus.EVENT.OBJECT_CREATED, obj.getId(), obj)
+						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_CREATED, obj.getId(), obj)
 					} else {
 						requestSubject.onError(onError(it))
 					}
@@ -141,7 +141,7 @@ internal class EGF2GraphApi : EGF2Api() {
 					if (it.isSuccessful) {
 						requestSubject.onNext(it.body())
 						EGF2Cache.addObjectOnEdge(idSrc, edge, obj)
-						EGF2Bus.postEdge(EGF2Bus.EVENT.EDGE_ADDED, idSrc, edge, obj)
+						EGF2Bus.post(EGF2Bus.EVENT.EDGE_ADDED, idSrc, edge, obj)
 					} else {
 						requestSubject.onError(onError2(it))
 					}
@@ -163,7 +163,7 @@ internal class EGF2GraphApi : EGF2Api() {
 						val obj = Gson().fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObject(obj.getId(), obj, null)
-						EGF2Bus.postObject(EGF2Bus.EVENT.OBJECT_UPDATED, obj.getId(), obj)
+						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_UPDATED, obj.getId(), obj)
 					} else {
 						requestSubject.onError(onError(it))
 					}
@@ -185,7 +185,7 @@ internal class EGF2GraphApi : EGF2Api() {
 						val obj = Gson().fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObjectOnEdge(id, edge, obj)
-						EGF2Bus.postEdge(EGF2Bus.EVENT.EDGE_ADDED, id, edge, obj)
+						EGF2Bus.post(EGF2Bus.EVENT.EDGE_ADDED, id, edge, obj)
 					} else {
 						requestSubject.onError(onError(it))
 					}
@@ -205,7 +205,7 @@ internal class EGF2GraphApi : EGF2Api() {
 					if (it.isSuccessful) {
 						requestSubject.onNext(it.body())
 						EGF2Cache.deleteObject(id)
-						EGF2Bus.postObject(EGF2Bus.EVENT.OBJECT_DELETED, id, null)
+						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_DELETED, id, null)
 					} else {
 						requestSubject.onError(onError2(it))
 					}
@@ -225,7 +225,7 @@ internal class EGF2GraphApi : EGF2Api() {
 					if (it.isSuccessful) {
 						requestSubject.onNext(it.body())
 						EGF2Cache.deleteObjectOnEdge(idSrc, edge, obj.getId())
-						EGF2Bus.postEdge(EGF2Bus.EVENT.EDGE_REMOVED, idSrc, edge, obj)
+						EGF2Bus.post(EGF2Bus.EVENT.EDGE_REMOVED, idSrc, edge, obj)
 					} else {
 						requestSubject.onError(onError2(it))
 					}

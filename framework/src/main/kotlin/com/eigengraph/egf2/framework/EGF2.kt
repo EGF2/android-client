@@ -217,7 +217,9 @@ object EGF2 {
 							graph.uploadFile((t as IEGF2File).getUploadUrl(), mime, requestBody),
 							{ file, uploaded ->
 								if (uploaded) {
-									graph.updateObject((file as IEGF2File).getId(), "{\"uploaded\":true}", clazz)
+									val jo = JsonObject()
+									jo.addProperty("uploaded", true)
+									graph.updateObject((file as IEGF2File).getId(), jo, clazz)
 								} else {
 									//Throwable("File Not Uploaded")
 									Observable.error<Any>(Throwable("File Not Uploaded"))
@@ -247,7 +249,9 @@ object EGF2 {
 							graph.uploadFile((t as IEGF2File).getUploadUrl(), mime, requestBody),
 							{ file, uploaded ->
 								if (uploaded) {
-									graph.updateObject((file as IEGF2File).getId(), "{\"uploaded\":true}", clazz)
+									val jo = JsonObject()
+									jo.addProperty("uploaded", true)
+									graph.updateObject((file as IEGF2File).getId(), jo, clazz)
 								} else {
 									//Throwable("Image Not Uploaded")
 									Observable.error<Any>(Throwable("Image Not Uploaded"))
@@ -362,6 +366,6 @@ object EGF2 {
 		EGF2Cache.compact()
 	}
 
-	fun isLogined() = EGF2Api.headers.containsKey("Authorization")
+	fun isLoggedIn() = EGF2Api.headers.containsKey("Authorization") && EGF2Api.headers["Authorization"]?.isNotEmpty() as Boolean
 
 }

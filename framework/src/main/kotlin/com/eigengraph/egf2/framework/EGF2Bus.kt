@@ -20,33 +20,33 @@ object EGF2Bus {
 		EDGE_PAGE_LOADED
 	}
 
-	class EventO(@JvmField val event: EVENT, @JvmField val id: String?, @JvmField val obj: EGF2Model?)
-	class EventE(@JvmField val event: EVENT, @JvmField val id: String, @JvmField val edgeName: String, @JvmField val edge: EGF2Edge<out EGF2Model>? = null, @JvmField val obj: EGF2Model? = null)
+	class ObjectEvent(@JvmField val event: EVENT, @JvmField val id: String?, @JvmField val obj: EGF2Model?)
+	class EdgeEvent(@JvmField val event: EVENT, @JvmField val id: String, @JvmField val edgeName: String, @JvmField val edge: EGF2Edge<out EGF2Model>? = null, @JvmField val obj: EGF2Model? = null)
 
-	private val mBusSubjectO = SerializedSubject(PublishSubject.create<EventO>())
-	private val mBusSubjectE = SerializedSubject(PublishSubject.create<EventE>())
+	private val mBusSubjectO = SerializedSubject(PublishSubject.create<ObjectEvent>())
+	private val mBusSubjectE = SerializedSubject(PublishSubject.create<EdgeEvent>())
 
-	fun subjectObject(event: EVENT, id: String?, onNext: Action1<EventO>): Subscription {
+	fun subscribeForObject(event: EVENT, id: String?, onNext: Action1<ObjectEvent>): Subscription {
 		return mBusSubjectO
 				.filter { it.event == event && (id == null || it.id == id) }
 				.subscribe(onNext)
 	}
 
-	fun subjectEdge(event: EVENT, id: String, edge: String, onNext: Action1<EventE>): Subscription {
+	fun subscribeForEdge(event: EVENT, id: String, edge: String, onNext: Action1<EdgeEvent>): Subscription {
 		return mBusSubjectE
 				.filter { it.event == event && it.id == id && it.edgeName == edge }
 				.subscribe(onNext)
 	}
 
-	fun postObject(event: EVENT, id: String?, obj: EGF2Model?) {
-		mBusSubjectO.onNext(EventO(event, id, obj))
+	fun post(event: EVENT, id: String?, obj: EGF2Model?) {
+		mBusSubjectO.onNext(ObjectEvent(event, id, obj))
 	}
 
-	fun postEdge(event: EVENT, id: String, edgeName: String, edge: EGF2Edge<out EGF2Model>?) {
-		mBusSubjectE.onNext(EventE(event, id, edgeName, edge = edge))
+	fun post(event: EVENT, id: String, edgeName: String, edge: EGF2Edge<out EGF2Model>?) {
+		mBusSubjectE.onNext(EdgeEvent(event, id, edgeName, edge = edge))
 	}
 
-	fun postEdge(event: EVENT, id: String, edge: String, obj: EGF2Model) {
-		mBusSubjectE.onNext(EventE(event, id, edge, obj = obj))
+	fun post(event: EVENT, id: String, edge: String, obj: EGF2Model) {
+		mBusSubjectE.onNext(EdgeEvent(event, id, edge, obj = obj))
 	}
 }
