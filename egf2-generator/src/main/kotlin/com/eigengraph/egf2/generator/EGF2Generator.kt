@@ -19,7 +19,7 @@ object EGF2Generator {
 	internal val packageDeserializers = ".models.deserializers"
 	internal val packageFramework = "com.eigengraph.egf2.framework"
 
-	private var preffixForModels: String = "EGF2"
+	private var prefixForModels: String = "EGF2"
 	private var file: File? = null
 	private var modelForFile: String? = null
 	private var kinds: Array<String>? = null
@@ -64,8 +64,8 @@ object EGF2Generator {
 
 				val graph: Graph = gson.fromJson(br, Graph::class.java)
 
-				val preffix = config.getPreffixForModels()
-				preffix?.let { preffixForModels = it }
+				val prefix = config.getPrefixForModels()
+				prefix?.let { prefixForModels = it }
 
 				file = File(config.getTargetDirectory().absolutePath)
 
@@ -96,11 +96,11 @@ object EGF2Generator {
 				.returns(String::class.java)
 				.addStatement("return \$S", config.getUrl())
 
-		val urlPreffix = MethodSpec.methodBuilder("urlPreffix")
+		val urlPrefix = MethodSpec.methodBuilder("urlPrefix")
 				.addAnnotation(Override::class.java)
 				.addModifiers(Modifier.PUBLIC)
 				.returns(String::class.java)
-				.addStatement("return \$S", config.getUrlPreffix())
+				.addStatement("return \$S", config.getUrlPrefix())
 
 		val defaultCount = MethodSpec.methodBuilder("defaultCount")
 				.addAnnotation(Override::class.java)
@@ -124,7 +124,7 @@ object EGF2Generator {
 				.addSuperinterface(ClassName.get(packageFramework, "IEGF2Config"))
 				.addModifiers(Modifier.PUBLIC)
 				.addMethod(url.build())
-				.addMethod(urlPreffix.build())
+				.addMethod(urlPrefix.build())
 				.addMethod(defaultCount.build())
 				.addMethod(maxCount.build())
 				.addMethod(paginationMode.build())
@@ -599,7 +599,7 @@ object EGF2Generator {
 		return baseClass
 	}
 
-	internal fun getName(n: String, usePreffix: Boolean = true): String {
+	internal fun getName(n: String, usePrefix: Boolean = true): String {
 		var name = n
 		var index = name.indexOf("_")
 		while (index >= 0) {
@@ -607,8 +607,8 @@ object EGF2Generator {
 			name = name.replaceRange(index, index + 2, char.toString())
 			index = name.indexOf("_")
 		}
-		if (usePreffix)
-			return preffixForModels + name.capitalize()
+		if (usePrefix)
+			return prefixForModels + name.capitalize()
 		else
 			return name.capitalize()
 	}

@@ -4,11 +4,11 @@ import com.eigengraph.egf2.generator.EGF2Config
 
 class EGF2Extension implements EGF2Config {
     String url
-    String urlPreffix
+    String urlPrefix
     File source
     File targetDirectory
     String targetPackage
-    String preffixForModels
+    String prefixForModels
     String modelForFile
     String[] kinds
     String[] excludeModels = []

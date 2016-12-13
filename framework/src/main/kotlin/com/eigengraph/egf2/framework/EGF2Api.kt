@@ -39,7 +39,7 @@ internal abstract class EGF2Api {
 
 	companion object {
 		var baseUrl: String = ""
-		var preffix: String = ""
+		var prefix: String = ""
 
 		val interceptor = HttpLoggingInterceptor()
 

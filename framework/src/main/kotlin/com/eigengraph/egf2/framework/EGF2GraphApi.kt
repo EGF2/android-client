@@ -31,7 +31,7 @@ internal class EGF2GraphApi : EGF2Api() {
 		val restClient = getRestClientBuilder()
 		restClient.addInterceptor(HttpHeaderInterceptor(baseUrl.replace("https://", "").replace("http://", "").replace("/", ""), { EGF2Api.getHeagers() }))
 		restClient.addInterceptor(interceptor)
-		restAdapter.baseUrl(baseUrl + preffix)
+		restAdapter.baseUrl(baseUrl + prefix)
 		restAdapter.client(restClient.build())
 		service = restAdapter.build().create(EGF2GraphService::class.java)
 	}

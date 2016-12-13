@@ -274,7 +274,7 @@ object EGF2 {
 	class Builder(val applicationContext: Context) {
 
 		private var baseUrl: String = ""
-		private var preffix: String = ""
+		private var prefix: String = ""
 		private var gson = Gson()
 		private var mode = PAGINATION_MODE.OBJECT
 		private var dbName: String? = null
@@ -286,7 +286,7 @@ object EGF2 {
 
 		fun build() {
 			EGF2Api.baseUrl = baseUrl
-			EGF2Api.preffix = preffix
+			EGF2Api.prefix = prefix
 			EGF2Api.gson = gson
 
 			paginationMode = mode
@@ -308,8 +308,8 @@ object EGF2 {
 			return this
 		}
 
-		fun usePreffix(preffix: String): Builder {
-			this.preffix = preffix
+		fun usePrefix(prefix: String): Builder {
+			this.prefix = prefix
 			return this
 		}
 
@@ -341,7 +341,7 @@ object EGF2 {
 
 		fun config(config: IEGF2Config): Builder {
 			baseUrl = config.url()
-			preffix = config.urlPreffix()
+			prefix = config.urlPrefix()
 			Log.d("EGF2", config.paginationMode().toUpperCase())
 			Log.d("EGF2", PAGINATION_MODE.values().toString())
 			mode = PAGINATION_MODE.valueOf(config.paginationMode().toUpperCase())
