@@ -69,15 +69,17 @@ object EGF2 {
 			.subscribeOn(Schedulers.io())
 			.observeOn(AndroidSchedulers.mainThread())
 
-	fun <T : EGF2Model> getSelfUser(normalizeExpand: String? = null, useCache: Boolean = true, clazz: Class<T>) = getObjectByID(EGF2Model.ME, normalizeExpand, useCache, clazz)
+	fun <T : EGF2Model> getSelfUser(expand: Array<String>? = null, useCache: Boolean = true, clazz: Class<T>) = getObjectByID(EGF2Model.ME, expand, useCache, clazz)
 
-	fun <T : EGF2Model> getObjectByID(id: String, normalizeExpand: String? = null, useCache: Boolean = true, clazz: Class<T>): Observable<T> {
+	fun <T : EGF2Model> getObjectByID(id: String, expand: Array<String>? = null, useCache: Boolean = true, clazz: Class<T>): Observable<T> {
 
 		val param = HashMap<String, Any>()
-		normalizeExpand?.let { param.put("expand", it) }
+
+		val ex = normalizeExpand(expand)
+		ex?.let { param.put("expand", it) }
 
 		if (useCache) {
-			return EGF2Cache.getObjectById<T>(id, normalizeExpand)
+			return EGF2Cache.getObjectById<T>(id, ex)
 					.flatMap {
 						if (it == null) {
 							graph.getObjectById(id, param, clazz)
@@ -94,7 +96,7 @@ object EGF2 {
 		}
 	}
 
-	fun <T : EGF2Model> getEdgeObjects(id: String, edge: String, after: EGF2Model?, count: Int, normalizeExpand: String? = null, useCache: Boolean = true): Observable<EGF2Edge<T>> {
+	fun <T : EGF2Model> getEdgeObjects(id: String, edge: String, after: EGF2Model?, count: Int, expand: Array<String>? = null, useCache: Boolean = true): Observable<EGF2Edge<T>> {
 		val param = HashMap<String, Any>()
 		after?.let {
 			when (paginationMode) {
@@ -108,10 +110,11 @@ object EGF2 {
 			}
 		}
 		if (count != DEF_COUNT) param.put("count", count)
-		normalizeExpand?.let { param.put("expand", normalizeExpand) }
+		val ex = normalizeExpand(expand)
+		ex?.let { param.put("expand", it) }
 
 		if (useCache) {
-			return EGF2Cache.getEdgeObjects<T>(id, edge, after, count, normalizeExpand)
+			return EGF2Cache.getEdgeObjects<T>(id, edge, after, count, ex)
 					.flatMap {
 						if (it == null) {
 							graph.getEdgeObjects<T>(id, edge, param)
@@ -128,12 +131,13 @@ object EGF2 {
 		}
 	}
 
-	fun <T : EGF2Model> getEdgeObject(idSrc: String, edge: String, idDst: String, normalizeExpand: String? = null, useCache: Boolean = true, clazz: Class<T>): Observable<T> {
+	fun <T : EGF2Model> getEdgeObject(idSrc: String, edge: String, idDst: String, expand: Array<String>? = null, useCache: Boolean = true, clazz: Class<T>): Observable<T> {
 		val param = HashMap<String, Any>()
-		normalizeExpand?.let { param.put("expand", it) }
+		val ex = normalizeExpand(expand)
+		ex?.let { param.put("expand", it) }
 
 		if (useCache) {
-			return EGF2Cache.getEdgeObject<T>(idSrc, edge, idDst, normalizeExpand)
+			return EGF2Cache.getEdgeObject<T>(idSrc, edge, idDst, ex)
 					.flatMap {
 						if (it == null) {
 							graph.getEdgeObject(idSrc, edge, idDst, param, clazz)
@@ -185,7 +189,7 @@ object EGF2 {
 					.observeOn(AndroidSchedulers.mainThread())
 
 
-	fun <T : EGF2Model> search(q: String, `object`: String, fields: String, filters: String, sort: String, range: String, normalizeExpand: String): Observable<EGF2Search<T>> {
+	fun <T : EGF2Model> search(q: String, `object`: String, fields: String, filters: String, sort: String, range: String, expand: String): Observable<EGF2Search<T>> {
 		val param = HashMap<String, Any>()
 		if (q.isNotEmpty()) param.put("q", q)
 		if (`object`.isNotEmpty()) param.put("object", `object`)
@@ -193,7 +197,7 @@ object EGF2 {
 		if (filters.isNotEmpty()) param.put("filters", filters)
 		if (sort.isNotEmpty()) param.put("sort", sort)
 		if (range.isNotEmpty()) param.put("range", range)
-		if (normalizeExpand.isNotEmpty()) param.put("expand", normalizeExpand)
+		if (expand.isNotEmpty()) param.put("expand", expand)
 
 		return graph.search<T>(param)
 				.subscribeOn(Schedulers.io())
@@ -263,7 +267,8 @@ object EGF2 {
 	}
 
 	//TODO normalizer
-	fun normalizeExpand(vararg expand: String): String {
+	private fun normalizeExpand(expand: Array<String>?): String? {
+		if (expand == null || expand.isEmpty()) return null
 		return TextUtils.join(",", expand.sorted())
 	}
 
