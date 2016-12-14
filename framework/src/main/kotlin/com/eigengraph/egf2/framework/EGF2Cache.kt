@@ -18,6 +18,8 @@ import java.util.*
 @Suppress("UNCHECKED_CAST")
 object EGF2Cache {
 
+	private var configDB: RealmConfiguration? = null
+
 	fun init(appContext: Context, name: String? = null, version: Long = 0, key: ByteArray? = null) {
 		Realm.init(appContext)
 		val config = RealmConfiguration.Builder()
@@ -26,7 +28,8 @@ object EGF2Cache {
 		config.schemaVersion(version)
 
 		config.deleteRealmIfMigrationNeeded()
-		Realm.setDefaultConfiguration(config.build())
+
+		configDB = config.build()
 	}
 
 	// object_id | normalize(expand)
@@ -34,9 +37,8 @@ object EGF2Cache {
 
 	fun <T : EGF2Model> getObjectById(id: String, normalizeExpand: String?): Observable<T?> {
 		return Observable.create<T?> {
+			val realm = Realm.getInstance(configDB)
 			try {
-				val realm = Realm.getDefaultInstance()
-
 				if (normalizeExpand == null) {
 					val obj = realm.where(objectRealm::class.java).equalTo("id", id).findFirst()
 					if (obj != null && obj.body != null) {
@@ -65,6 +67,7 @@ object EGF2Cache {
 			} catch (e: Exception) {
 				it.onError(e)
 			} finally {
+				realm.close()
 				it.onCompleted()
 			}
 		}
@@ -72,11 +75,12 @@ object EGF2Cache {
 
 	fun <T : EGF2Model> getEdgeObjects(id: String, edge: String, after: EGF2Model?, count: Int, normalizeExpand: String?): Observable<EGF2Edge<T>?> {
 		return Observable.create {
-			try {
-				val realm = Realm.getDefaultInstance()
 
+			val realm = Realm.getInstance(configDB)
+			try {
 				//TODO fix get cache with filter by normalizeExpand
-				val cache = realm.where(cacheRealm::class.java).equalTo("id", id + "/" + edge + normalizeExpand?.let { "/" + it }).findFirst()
+				val i = id + "/" + edge + normalizeExpand?.let { "/" + it }
+				val cache = realm.where(cacheRealm::class.java).equalTo("id", i).findFirst()// + normalizeExpand?.let { "/" + it }
 
 				if (cache == null) {
 					it.onNext(null)
@@ -109,22 +113,22 @@ object EGF2Cache {
 						listId.forEach {
 							r.equalTo("id", it).or()
 						}
-						val listObj = ArrayList<EGF2Model>()
+						val listObj = ArrayList<T>()
 						r.findAll().forEach {
 							val obj = convertFromBytes(it.body as ByteArray) as T
 							listObj.add(obj)
 						}
 
 						val edt = EGF2Edge<T>()
-						edt.result = listObj as List<T>
+						edt.results = listObj
 						edt.count = edgeCount
 
 						when (EGF2.paginationMode) {
 							EGF2.PAGINATION_MODE.INDEX -> {
-								edt.last = edt.result.size.toString()
+								edt.last = edt.results.size.toString()
 							}
 							EGF2.PAGINATION_MODE.OBJECT -> {
-								edt.last = edt.result.last().getId()
+								edt.last = edt.results.last().getId()
 							}
 						}
 
@@ -134,6 +138,7 @@ object EGF2Cache {
 			} catch (e: Exception) {
 				it.onError(e)
 			} finally {
+				realm.close()
 				it.onCompleted()
 			}
 		}
@@ -141,11 +146,12 @@ object EGF2Cache {
 
 	fun <T : EGF2Model> getEdgeObject(idSrc: String, edge: String, idDst: String, normalizeExpand: String?): Observable<T?> {
 		return Observable.create {
-			try {
-				val realm = Realm.getDefaultInstance()
 
+			val realm = Realm.getInstance(configDB)
+			try {
 				//TODO fix get cache with filter by normalizeExpand
-				val cache = realm.where(cacheRealm::class.java).equalTo("id", idSrc + "/" + edge + normalizeExpand?.let { "/" + it }).findFirst()
+				val i = idSrc + "/" + edge + normalizeExpand?.let { "/" + it }
+				val cache = realm.where(cacheRealm::class.java).equalTo("id", i).findFirst()
 
 				if (cache == null) {
 					it.onNext(null)
@@ -168,6 +174,7 @@ object EGF2Cache {
 			} catch (e: Exception) {
 				it.onError(e)
 			} finally {
+				realm.close()
 				it.onCompleted()
 			}
 		}
@@ -182,8 +189,8 @@ object EGF2Cache {
 		cache.id = id
 		normalizeExpand?.let { cache.id + "/" + it }
 
-		Realm.getDefaultInstance().use {
-			it.executeTransaction {
+		Realm.getInstance(configDB).use {
+			it.executeTransactionAsync {
 				it.copyToRealmOrUpdate(objectRealm)
 				it.copyToRealmOrUpdate(cache)
 			}
@@ -200,13 +207,13 @@ object EGF2Cache {
 		val cache = cacheRealm()
 		cache.id = id + "/" + edgeName
 		cache.after = ""
-		cache.count = edge.result.size
-		normalizeExpand?.let { cache.id + "/" + it }
+		cache.count = edge.results.size
+		normalizeExpand?.let { cache.id = cache.id + "/" + it }
 
 		val listObj = ArrayList<objectRealm>()
 		val listEdge = ArrayList<edgeRealm>()
 
-		edge.result.forEachIndexed { i, egfModel ->
+		edge.results.forEachIndexed { i, egfModel ->
 			val obj = objectRealm()
 			val e = edgeRealm()
 
@@ -222,23 +229,23 @@ object EGF2Cache {
 			listObj.add(obj)
 		}
 
-		Realm.getDefaultInstance().use {
-			it.executeTransaction {
+		Realm.getInstance(configDB).use {
+			it.executeTransactionAsync {
 				if (edge.first == null) {
 					it.where(edgeRealm::class.java).equalTo("id_src", id).equalTo("edge", edgeName).findAll().deleteAllFromRealm()
 				}
-				it.copyToRealmOrUpdate(listObj)
-				it.copyToRealmOrUpdate(listEdge)
-				it.copyToRealmOrUpdate(cache)
-				it.copyToRealmOrUpdate(edgeCount)
+				it.insertOrUpdate(listObj)
+				it.insert(listEdge)
+				it.insertOrUpdate(cache)
+				it.insertOrUpdate(edgeCount)
 			}
 			it.close()
 		}
 	}
 
 	fun deleteObject(id: String) {
-		Realm.getDefaultInstance().use {
-			it.executeTransaction {
+		Realm.getInstance(configDB).use {
+			it.executeTransactionAsync {
 				it.where(objectRealm::class.java)
 						.equalTo("id", id)
 						.findAll().deleteAllFromRealm()
@@ -251,7 +258,7 @@ object EGF2Cache {
 	}
 
 	fun addObjectOnEdge(idSrc: String, edge: String, obj: EGF2Model) {
-		Realm.getDefaultInstance().use {
+		Realm.getInstance(configDB).use {
 			val objectRealm = objectRealm()
 			objectRealm.id = obj.getId()
 			objectRealm.body = convertToBytes(obj)
@@ -277,10 +284,10 @@ object EGF2Cache {
 				edgeCount.count = 1
 
 				it.executeTransaction {
-					it.copyToRealmOrUpdate(ec)
+					it.copyToRealmOrUpdate(edgeCount)
 					it.copyToRealmOrUpdate(objectRealm)
 					it.copyToRealmOrUpdate(cache2)
-					it.copyToRealmOrUpdate(e)
+					it.copyToRealm(e)
 					it.copyToRealmOrUpdate(cache)
 				}
 			} else {
@@ -293,7 +300,7 @@ object EGF2Cache {
 							.findAll().deleteAllFromRealm()
 					it.copyToRealmOrUpdate(objectRealm)
 					it.copyToRealmOrUpdate(cache2)
-					it.copyToRealmOrUpdate(e)
+					it.copyToRealm(e)
 					it.copyToRealmOrUpdate(cache)
 
 					it.where(edgeRealm::class.java)
@@ -307,7 +314,7 @@ object EGF2Cache {
 	}
 
 	fun deleteObjectOnEdge(idSrc: String, edge: String, idDst: String) {
-		Realm.getDefaultInstance().use {
+		Realm.getInstance(configDB).use {
 			val ec = it.where(edgeCountRealm::class.java).equalTo("id", idDst + "/" + edge).findFirst()
 			it.executeTransaction {
 				it.where(objectRealm::class.java)
@@ -336,23 +343,26 @@ object EGF2Cache {
 	}
 
 	fun getIndex(idSrc: String, edge: String, idDst: String): Int? {
-		val realm = Realm.getDefaultInstance()
+		val realm = Realm.getInstance(configDB)
 		val obj = realm.where(edgeRealm::class.java).equalTo("id_src", idSrc).equalTo("edge", edge).equalTo("id_dst", idDst).findFirst()
+		var i: Int? = null
 		obj?.let {
-			return it.index
+			i = it.index
 		}
-		return null
+		realm.close()
+		return i
 	}
 
 	fun clear() {
-		Realm.getDefaultInstance().use(Realm::deleteAll)
-		//Realm.getDefaultInstance().use(Realm::close)
-		//Realm.deleteRealm(Realm.getDefaultInstance().configuration)
+		Realm.getInstance(configDB).use {
+			it.executeTransactionAsync(Realm::deleteAll)
+			it.close()
+		}
 	}
 
 	fun compact() {
 		try {
-			Realm.compactRealm(Realm.getDefaultInstance().configuration)
+			Realm.compactRealm(configDB)
 		} catch (e: Exception) {
 			//FIXME
 		}

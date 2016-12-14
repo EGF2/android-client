@@ -11,12 +11,14 @@ import com.eigengraph.egf2.framework.models.EGF2Search
 import com.eigengraph.egf2.framework.models.IEGF2File
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.reflect.TypeToken
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.io.File
+import java.lang.reflect.Type
 import java.util.*
 
 object EGF2 {
@@ -96,7 +98,7 @@ object EGF2 {
 		}
 	}
 
-	fun <T : EGF2Model> getEdgeObjects(id: String, edge: String, after: EGF2Model?, count: Int, expand: Array<String>? = null, useCache: Boolean = true): Observable<EGF2Edge<T>> {
+	fun <T : EGF2Model> getEdgeObjects(id: String, edge: String, after: EGF2Model?, count: Int, expand: Array<String>? = null, useCache: Boolean = true, clazz: Class<T>): Observable<EGF2Edge<T>> {
 		val param = HashMap<String, Any>()
 		after?.let {
 			when (paginationMode) {
@@ -117,7 +119,7 @@ object EGF2 {
 			return EGF2Cache.getEdgeObjects<T>(id, edge, after, count, ex)
 					.flatMap {
 						if (it == null) {
-							graph.getEdgeObjects<T>(id, edge, param)
+							graph.getEdgeObjects(id, edge, param, clazz)
 						} else {
 							Observable.just(it)
 						}
@@ -125,7 +127,7 @@ object EGF2 {
 					.subscribeOn(Schedulers.io())
 					.observeOn(AndroidSchedulers.mainThread())
 		} else {
-			return graph.getEdgeObjects<T>(id, edge, param)
+			return graph.getEdgeObjects(id, edge, param, clazz)
 					.subscribeOn(Schedulers.io())
 					.observeOn(AndroidSchedulers.mainThread())
 		}
@@ -276,6 +278,8 @@ object EGF2 {
 		return Builder(applicationContext)
 	}
 
+	internal var mapClassTypes: HashMap<String, Type> = HashMap()
+
 	class Builder(val applicationContext: Context) {
 
 		private var baseUrl: String = ""
@@ -288,6 +292,7 @@ object EGF2 {
 		private var def_count = MAX_COUNT
 		private var max_count = DEF_COUNT
 		private var token: String? = null
+		private var mapTypes: HashMap<String, Type> = HashMap()
 
 		fun build() {
 			EGF2Api.baseUrl = baseUrl
@@ -298,6 +303,9 @@ object EGF2 {
 
 			MAX_COUNT = max_count
 			DEF_COUNT = def_count
+
+			mapClassTypes = mapTypes
+			mapClassTypes.put(EGF2Model::class.java.simpleName, object : TypeToken<EGF2Edge<EGF2Model>>() {}.type)
 
 			auth = EGF2Api.getApi<EGF2AuthApi>(AUTH_API)
 			graph = EGF2Api.getApi<EGF2GraphApi>(GRAPH_API)
@@ -359,6 +367,11 @@ object EGF2 {
 
 		fun token(token: String?): Builder {
 			this.token = token
+			return this
+		}
+
+		fun types(map: IEGF2MapTypesFactory): Builder {
+			mapTypes = map.create()
 			return this
 		}
 	}

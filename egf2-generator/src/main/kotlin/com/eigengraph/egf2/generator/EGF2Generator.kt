@@ -77,8 +77,10 @@ object EGF2Generator {
 					createClass(baseClass, config, it, graph.custom_schemas)
 				}
 
+				createEGF2ModelDeserializer(config)
 				createEGF2GsonFactory(config)
 				createEGF2Config(config, graph)
+				createEGF2MapClasses(config)
 
 			} catch (e: Exception) {
 				throw Exception("EGF2Generator:" + e.message)
@@ -86,6 +88,46 @@ object EGF2Generator {
 		} else {
 			throw Exception("Could not create or access target directory " + config.getTargetDirectory().absolutePath)
 		}
+	}
+
+	private fun createEGF2ModelDeserializer(config: EGF2Config) {
+		val jsonDeserializer = ClassName.get("com.google.gson", "JsonDeserializer")
+		val jsonParseException = ClassName.get("com.google.gson", "JsonParseException")
+		val jsonElement = ClassName.get("com.google.gson", "JsonElement")
+		val jsonDeserializationContext = ClassName.get("com.google.gson", "JsonDeserializationContext")
+		val jsonObject = ClassName.get("com.google.gson", "JsonObject")
+		val nameClass = ClassName.get(packageFramework + packageModels, "EGF2Model")
+
+		val deserialize = MethodSpec.methodBuilder("deserialize").addException(jsonParseException)
+				.addModifiers(Modifier.PUBLIC)
+				.addAnnotation(Override::class.java)
+				.addParameter(jsonElement, "json")
+				.addParameter(Type::class.java, "typeOfT")
+				.addParameter(jsonDeserializationContext, "context")
+				.returns(nameClass)
+				.addStatement("final \$T jsonObject = json.getAsJsonObject()", jsonObject)
+				.beginControlFlow("if(jsonObject.has(\"object_type\"))")
+				.beginControlFlow("switch(jsonObject.get(\"object_type\").getAsString())")
+
+		mapDeserizers.forEach {
+			deserialize.addCode("case \$L.OBJECT_TYPE:\n",
+					ClassName.get(config.getTargetPackage() + EGF2Generator.packageModels, it.key))
+			deserialize.addStatement("\treturn new \$L().deserialize(json, typeOfT, context)",
+					ClassName.get(config.getTargetPackage() + EGF2Generator.packageDeserializers, it.value))
+		}
+
+		deserialize.endControlFlow()
+		deserialize.endControlFlow()
+		deserialize.addStatement("return new EGF2Model()")
+
+		val clazz = TypeSpec.classBuilder("EGF2ModelDeserializer")
+				.addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+				.addSuperinterface(ParameterizedTypeName.get(jsonDeserializer, nameClass))
+				.addMethod(deserialize.build())
+				.build()
+
+		val javaFile = JavaFile.builder(config.getTargetPackage() + packageDeserializers, clazz).build()
+		javaFile.writeTo(file)
 	}
 
 	private fun createEGF2Config(config: EGF2Config, graph: Graph) {
@@ -134,6 +176,37 @@ object EGF2Generator {
 		javaFile.writeTo(file)
 	}
 
+	private fun createEGF2MapClasses(config: EGF2Config) {
+
+		val p = ParameterizedTypeName.get(HashMap::class.java, java.lang.String::class.java, Type::class.java)
+		val typeToken = ClassName.get("com.google.gson.reflect", "TypeToken")
+
+		val func = MethodSpec.methodBuilder("create")
+				.addAnnotation(Override::class.java)
+				.addModifiers(Modifier.PUBLIC)
+				.returns(p)
+
+		func.addStatement("\$T map = new \$T()", p, p)
+
+		mapDeserizers.forEach {
+			val edge = ClassName.get(packageFramework + packageModels, "EGF2Edge")
+			val p2 = ParameterizedTypeName.get(edge, ClassName.get(config.getTargetPackage() + EGF2Generator.packageModels, it.key))
+			func.addStatement("map.put(\$T.class.getSimpleName(), new \$T(){}.getType())",
+					ClassName.get(config.getTargetPackage() + EGF2Generator.packageModels, it.key),
+					ParameterizedTypeName.get(typeToken, p2))
+		}
+		func.addStatement("return map")
+
+		val EGF2MapTypesFactory = TypeSpec.classBuilder(getName("MapTypesFactory"))
+				.addSuperinterface(ClassName.get(packageFramework, "IEGF2MapTypesFactory"))
+				.addModifiers(Modifier.PUBLIC)
+				.addMethod(func.build())
+				.build()
+
+		val javaFile = JavaFile.builder(config.getTargetPackage(), EGF2MapTypesFactory).build()
+		javaFile.writeTo(file)
+	}
+
 	private fun createEGF2GsonFactory(config: EGF2Config) {
 
 		val gson = ClassName.get("com.google.gson", "Gson")
@@ -144,6 +217,10 @@ object EGF2Generator {
 				.addModifiers(Modifier.PUBLIC)
 				.returns(gson)
 				.addCode("return new \$L()\n", gsonBuilder)
+
+		func.addCode(".registerTypeAdapter(\$L.class, new \$L())\n",
+				ClassName.get(packageFramework + packageModels, "EGF2Model"),
+				ClassName.get(config.getTargetPackage() + EGF2Generator.packageDeserializers, "EGF2ModelDeserializer"))
 
 		mapDeserizers.forEach {
 			func.addCode(".registerTypeAdapter(\$L.class, new \$L())\n",
@@ -444,7 +521,7 @@ object EGF2Generator {
 					deserialize.beginControlFlow("if(jo.has(\"last\"))")
 					deserialize.addStatement("edge.setLast(jo.get(\"last\").getAsString())")
 					deserialize.endControlFlow()
-					deserialize.addStatement("edge.setResult(result)")
+					deserialize.addStatement("edge.setResults(result)")
 					deserialize.addStatement("\$L.INSTANCE.addEdge(obj.id, \$S, edge, null)", cache, it.name)
 
 				}

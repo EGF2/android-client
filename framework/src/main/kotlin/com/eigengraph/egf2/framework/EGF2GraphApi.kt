@@ -4,7 +4,6 @@ import com.eigengraph.egf2.framework.models.EGF2Edge
 import com.eigengraph.egf2.framework.models.EGF2Model
 import com.eigengraph.egf2.framework.models.EGF2Search
 import com.eigengraph.egf2.framework.util.HttpHeaderInterceptor
-import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
@@ -44,7 +43,7 @@ internal class EGF2GraphApi : EGF2Api() {
 				.subscribe({
 					if (it.isSuccessful) {
 						val json = it.body()?.toString()
-						val obj = Gson().fromJson(json, clazz)
+						val obj = EGF2Api.gson.fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObject(id, obj, param["expand"] as String?)
 						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_UPDATED, id, obj)
@@ -58,25 +57,30 @@ internal class EGF2GraphApi : EGF2Api() {
 		return requestSubject.asObservable()
 	}
 
-	internal fun <T : EGF2Model> getEdgeObjects(id: String, edge: String, param: HashMap<String, Any>): Observable<EGF2Edge<T>> {
+	internal fun <T : EGF2Model> getEdgeObjects(id: String, edge: String, param: HashMap<String, Any>, clazz: Class<T>): Observable<EGF2Edge<T>> {
 		val requestSubject = BehaviorSubject.create<EGF2Edge<T>>()
 
 		service.getEdge(id, edge, param)
 				.subscribeOn(Schedulers.io())
 				.subscribe({
 					if (it.isSuccessful) {
-						val type: Type = object : TypeToken<EGF2Edge<T>>() {}.type
-						val json = it.body()?.toString()
-						val e: EGF2Edge<T> = Gson().fromJson(json, type)
-						requestSubject.onNext(e)
-						if (e.result.isNotEmpty()) {
-							EGF2Cache.addEdge(id, edge, e, param["expand"] as String?)
-						}
-						val after = param["after"]
-						if (after == null) {
-							EGF2Bus.post(EGF2Bus.EVENT.EDGE_PAGE_LOADED, id, edge, e)
+						val type: Type? = EGF2.mapClassTypes[clazz.simpleName]
+						if (type != null) {
+							val json = it.body()?.toString()
+							val e: EGF2Edge<T> = EGF2Api.gson.fromJson(json, type)
+							requestSubject.onNext(e)
+							if (e.results.isNotEmpty()) {
+								EGF2Cache.addEdge(id, edge, e, param["expand"] as String?)
+							}
+							val after = param["after"]
+							if (after == null) {
+								EGF2Bus.post(EGF2Bus.EVENT.EDGE_PAGE_LOADED, id, edge, e)
+							} else {
+								EGF2Bus.post(EGF2Bus.EVENT.EDGE_REFRESHED, id, edge, e)
+							}
 						} else {
-							EGF2Bus.post(EGF2Bus.EVENT.EDGE_REFRESHED, id, edge, e)
+							//TODO
+							requestSubject.onError(Throwable(clazz.simpleName + " Type Not Found"))
 						}
 					} else {
 						requestSubject.onError(onErrorEdge(it))
@@ -96,7 +100,7 @@ internal class EGF2GraphApi : EGF2Api() {
 				.subscribe({
 					if (it.isSuccessful) {
 						val json = it.body()?.toString()
-						val obj = Gson().fromJson(json, clazz)
+						val obj = EGF2Api.gson.fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObject(obj.getId(), obj, null)
 						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_UPDATED, idDst, obj)
@@ -118,7 +122,7 @@ internal class EGF2GraphApi : EGF2Api() {
 				.subscribe({
 					if (it.isSuccessful) {
 						val json = it.body()?.toString()
-						val obj = Gson().fromJson(json, clazz)
+						val obj = EGF2Api.gson.fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObject(obj.getId(), obj, null)
 						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_CREATED, obj.getId(), obj)
@@ -160,7 +164,7 @@ internal class EGF2GraphApi : EGF2Api() {
 				.subscribe({
 					if (it.isSuccessful) {
 						val json = it.body()?.toString()
-						val obj = Gson().fromJson(json, clazz)
+						val obj = EGF2Api.gson.fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObject(obj.getId(), obj, null)
 						EGF2Bus.post(EGF2Bus.EVENT.OBJECT_UPDATED, obj.getId(), obj)
@@ -182,7 +186,7 @@ internal class EGF2GraphApi : EGF2Api() {
 				.subscribe({
 					if (it.isSuccessful) {
 						val json = it.body()?.toString()
-						val obj = Gson().fromJson(json, clazz)
+						val obj = EGF2Api.gson.fromJson(json, clazz)
 						requestSubject.onNext(obj)
 						EGF2Cache.addObjectOnEdge(id, edge, obj)
 						EGF2Bus.post(EGF2Bus.EVENT.EDGE_ADDED, id, edge, obj)
@@ -242,7 +246,7 @@ internal class EGF2GraphApi : EGF2Api() {
 						if (it.isSuccessful) {
 							val type: Type = object : TypeToken<EGF2Search<T>>() {}.type
 							val json = it.body()?.toString()
-							val e: EGF2Search<T> = Gson().fromJson(json, type)
+							val e: EGF2Search<T> = EGF2Api.gson.fromJson(json, type)
 							Observable.just(e)
 						} else {
 							Observable.error(onError2(it))
@@ -283,8 +287,7 @@ internal class EGF2GraphApi : EGF2Api() {
 			if (it.errorBody() != null) {
 				val error: String = it.errorBody().string()
 				try {
-					val gson: Gson = Gson()
-					val je: JsonElement = gson.fromJson(error, JsonElement::class.java)
+					val je: JsonElement = EGF2Api.gson.fromJson(error, JsonElement::class.java)
 					val jo: JsonObject = je.asJsonObject
 					if (jo.has("code") && jo.has("message")) {
 						Throwable(jo.get("code").asString + ": " + jo.get("message").asString)
@@ -301,8 +304,7 @@ internal class EGF2GraphApi : EGF2Api() {
 	private fun onError(it: Response<JsonObject>): Throwable? {
 		if (it.errorBody() != null) {
 			val error: String = it.errorBody().string()
-			val gson: Gson = Gson()
-			val je: JsonElement = gson.fromJson(error, JsonElement::class.java)
+			val je: JsonElement = EGF2Api.gson.fromJson(error, JsonElement::class.java)
 			val jo: JsonObject = je.asJsonObject
 			if (jo.has("code") && jo.has("message")) {
 				return Throwable(jo.get("code").asString + ": " + jo.get("message").asString)
@@ -317,8 +319,7 @@ internal class EGF2GraphApi : EGF2Api() {
 	private fun onErrorEdge(it: Response<JsonObject>): Throwable? =
 			if (it.errorBody() != null) {
 				val error: String = it.errorBody().string()
-				val gson: Gson = Gson()
-				val je: JsonElement = gson.fromJson(error, JsonElement::class.java)
+				val je: JsonElement = EGF2Api.gson.fromJson(error, JsonElement::class.java)
 				val jo: JsonObject = je.asJsonObject
 				if (jo.has("code") && jo.has("message")) {
 					Throwable(jo.get("code").asString + ": " + jo.get("message").asString)

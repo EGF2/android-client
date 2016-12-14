@@ -3,14 +3,14 @@ package com.eigengraph.egf2.framework.models
 import com.google.gson.JsonObject
 import java.io.Serializable
 
-abstract class EGF2Model : Serializable {
+open class EGF2Model : Serializable {
 	companion object {
 		const val ME: String = "me"
 	}
 
-	abstract fun getId(): String
+	open fun getId(): String = ""
 
-	abstract fun update(): JsonObject
+	open fun update(): JsonObject = JsonObject()
 
-	abstract fun create(): JsonObject
+	open fun create(): JsonObject = JsonObject()
 }
