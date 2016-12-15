@@ -22,6 +22,10 @@ import java.lang.reflect.Type
 import java.util.*
 
 object EGF2 {
+	@JvmField
+	var DEF_COUNT = 25
+	@JvmField
+	var MAX_COUNT = 50
 
 	enum class PAGINATION_MODE {
 		INDEX,
@@ -31,10 +35,8 @@ object EGF2 {
 	private lateinit var auth: EGF2AuthApi
 	private lateinit var graph: EGF2GraphApi
 
-	@JvmField
-	var DEF_COUNT = 25
-	@JvmField
-	var MAX_COUNT = 50
+	internal var mapClassTypes: HashMap<String, Type> = HashMap()
+	internal var debugMode: Boolean = false
 
 	var paginationMode: PAGINATION_MODE = PAGINATION_MODE.OBJECT
 
@@ -278,8 +280,6 @@ object EGF2 {
 		return Builder(applicationContext)
 	}
 
-	internal var mapClassTypes: HashMap<String, Type> = HashMap()
-
 	class Builder(val applicationContext: Context) {
 
 		private var baseUrl: String = ""
@@ -293,6 +293,7 @@ object EGF2 {
 		private var max_count = DEF_COUNT
 		private var token: String? = null
 		private var mapTypes: HashMap<String, Type> = HashMap()
+		private var debugMode: Boolean = false
 
 		fun build() {
 			EGF2Api.baseUrl = baseUrl
@@ -303,6 +304,8 @@ object EGF2 {
 
 			MAX_COUNT = max_count
 			DEF_COUNT = def_count
+
+			EGF2.debugMode = debugMode
 
 			mapClassTypes = mapTypes
 			mapClassTypes.put(EGF2Model::class.java.simpleName, object : TypeToken<EGF2Edge<EGF2Model>>() {}.type)
@@ -374,6 +377,11 @@ object EGF2 {
 			mapTypes = map.create()
 			return this
 		}
+
+		fun debug(value: Boolean): Builder {
+			debugMode = value
+			return this
+		}
 	}
 
 	fun clearCache() {
@@ -385,5 +393,4 @@ object EGF2 {
 	}
 
 	fun isLoggedIn() = EGF2Api.headers.containsKey("Authorization") && EGF2Api.headers["Authorization"]?.isNotEmpty() as Boolean
-
 }

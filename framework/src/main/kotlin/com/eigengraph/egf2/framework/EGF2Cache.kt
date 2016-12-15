@@ -80,7 +80,7 @@ object EGF2Cache {
 			try {
 				//TODO fix get cache with filter by normalizeExpand
 				val i = id + "/" + edge + normalizeExpand?.let { "/" + it }
-				val cache = realm.where(cacheRealm::class.java).equalTo("id", i).findFirst()// + normalizeExpand?.let { "/" + it }
+				val cache = realm.where(cacheRealm::class.java).equalTo("id", i).findFirst()
 
 				if (cache == null) {
 					it.onNext(null)
