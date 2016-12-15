@@ -3,7 +3,6 @@
 package com.eigengraph.egf2.generator.mappers
 
 import com.eigengraph.egf2.generator.Field
-import com.eigengraph.egf2.generator.Mapper
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
 import org.jetbrains.annotations.NotNull
@@ -15,7 +14,6 @@ class BooleanMapper(targetPackage: String) : Mapper(targetPackage) {
 	override fun getField(field: Field, custom_schemas: LinkedHashMap<String, LinkedList<Field>>): FieldSpec {
 		val fs: FieldSpec.Builder
 		fs = FieldSpec.builder(java.lang.Boolean::class.java, field.name, Modifier.PUBLIC)
-		//if(it.default!=null) fs.initializer("\$L", it.default)
 		if (field.required) {
 			fs.addAnnotation(NotNull::class.java)
 			fs.initializer("\$L", field.default)
@@ -29,13 +27,12 @@ class BooleanMapper(targetPackage: String) : Mapper(targetPackage) {
 		if (field.required) {
 			deserialize.addStatement("final Boolean \$L = jsonObject.get(\"\$L\").getAsBoolean()", field.name, field.name)
 			deserialize.addStatement("\$L.\$L = \$L", supername, field.name, field.name)
-			deserialize.addCode("\n")
 		} else {
 			deserialize.beginControlFlow("if(jsonObject.has(\"\$L\"))", field.name)
 			deserialize.addStatement("final Boolean \$L = jsonObject.get(\"\$L\").getAsBoolean()", field.name, field.name)
 			deserialize.addStatement("\$L.\$L = \$L", supername, field.name, field.name)
 			deserialize.endControlFlow()
-			deserialize.addCode("\n")
 		}
+		deserialize.addCode("\n")
 	}
 }

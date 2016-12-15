@@ -1,7 +1,6 @@
 package com.eigengraph.egf2.generator.mappers
 
 import com.eigengraph.egf2.generator.Field
-import com.eigengraph.egf2.generator.Mapper
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
 import org.jetbrains.annotations.NotNull
@@ -29,13 +28,12 @@ class StringMapper(targetPackage: String) : Mapper(targetPackage) {
 		if (field.required) {
 			deserialize.addStatement("final String \$L = jsonObject.get(\"\$L\").getAsString()", field.name, field.name)
 			deserialize.addStatement("\$L.\$L = \$L", supername, field.name, field.name)
-			deserialize.addCode("\n")
 		} else {
 			deserialize.beginControlFlow("if(jsonObject.has(\"\$L\"))", field.name)
 			deserialize.addStatement("final String \$L = jsonObject.get(\"\$L\").getAsString()", field.name, field.name)
 			deserialize.addStatement("\$L.\$L = \$L", supername, field.name, field.name)
 			deserialize.endControlFlow()
-			deserialize.addCode("\n")
 		}
+		deserialize.addCode("\n")
 	}
 }

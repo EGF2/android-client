@@ -9,8 +9,6 @@ open class EGF2Model : Serializable {
 	}
 
 	open fun getId(): String = ""
-
 	open fun update(): JsonObject = JsonObject()
-
 	open fun create(): JsonObject = JsonObject()
 }

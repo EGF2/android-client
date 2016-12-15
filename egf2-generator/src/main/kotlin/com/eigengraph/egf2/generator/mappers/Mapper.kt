@@ -1,5 +1,6 @@
-package com.eigengraph.egf2.generator
+package com.eigengraph.egf2.generator.mappers
 
+import com.eigengraph.egf2.generator.Field
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
 import java.util.*

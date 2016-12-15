@@ -23,12 +23,12 @@ object EGF2Generator {
 	private var file: File? = null
 	private var modelForFile: String? = null
 	private var kinds: Array<String>? = null
+	private var mapDeserizers = emptyMap<String, String>()
+	private val DESERIALIZER_MAPPERS = ConcurrentHashMap<String, Mapper>()
+
 	var excludeModels: Array<String> = emptyArray()
 	var back_end_only = ArrayList<String>()
 
-	private var mapDeserizers = emptyMap<String, String>()
-
-	private val DESERIALIZER_MAPPERS = ConcurrentHashMap<String, Mapper>()
 
 	fun generate(config: EGF2Config) {
 
@@ -37,9 +37,7 @@ object EGF2Generator {
 		}
 
 		if (config.getTargetDirectory().exists() || config.getTargetDirectory().mkdirs()) {
-
 			try {
-
 				DESERIALIZER_MAPPERS.put("string", StringMapper(config.getTargetPackage()))
 				DESERIALIZER_MAPPERS.put("date", StringMapper(config.getTargetPackage()))
 				DESERIALIZER_MAPPERS.put("boolean", BooleanMapper(config.getTargetPackage()))
@@ -50,9 +48,7 @@ object EGF2Generator {
 				DESERIALIZER_MAPPERS.put("array", ArrayMapper(config.getTargetPackage()))
 
 				modelForFile = config.getModelForFile()
-
 				kinds = config.getKinds()
-
 				excludeModels = config.getExcludeModels()
 
 				val br = BufferedReader(FileReader(config.getSource()))
@@ -131,7 +127,6 @@ object EGF2Generator {
 	}
 
 	private fun createEGF2Config(config: EGF2Config, graph: Graph) {
-
 		val url = MethodSpec.methodBuilder("url")
 				.addAnnotation(Override::class.java)
 				.addModifiers(Modifier.PUBLIC)
@@ -177,7 +172,6 @@ object EGF2Generator {
 	}
 
 	private fun createEGF2MapClasses(config: EGF2Config) {
-
 		val p = ParameterizedTypeName.get(HashMap::class.java, java.lang.String::class.java, Type::class.java)
 		val typeToken = ClassName.get("com.google.gson.reflect", "TypeToken")
 
@@ -208,7 +202,6 @@ object EGF2Generator {
 	}
 
 	private fun createEGF2GsonFactory(config: EGF2Config) {
-
 		val gson = ClassName.get("com.google.gson", "Gson")
 		val gsonBuilder = ClassName.get("com.google.gson", "GsonBuilder")
 
@@ -241,7 +234,6 @@ object EGF2Generator {
 	}
 
 	private fun createCustomSchemas(custom_schemas: LinkedHashMap<String, LinkedList<Field>>, config: EGF2Config) {
-
 		custom_schemas.forEach {
 			val fields = ArrayList<FieldSpec>()
 			val enums = ArrayList<TypeSpec>()
@@ -548,7 +540,6 @@ object EGF2Generator {
 	}
 
 	private fun createBaseClass(graph: Graph, config: EGF2Config): TypeSpec? {
-
 		val jsonObject = ClassName.get("com.google.gson", "JsonObject")
 		val jsonParseException = ClassName.get("com.google.gson", "JsonParseException")
 

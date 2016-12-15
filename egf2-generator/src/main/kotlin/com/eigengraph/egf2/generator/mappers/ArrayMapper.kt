@@ -4,7 +4,6 @@ package com.eigengraph.egf2.generator.mappers
 
 import com.eigengraph.egf2.generator.EGF2Generator
 import com.eigengraph.egf2.generator.Field
-import com.eigengraph.egf2.generator.Mapper
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
@@ -23,9 +22,6 @@ class ArrayMapper(targetPackage: String) : Mapper(targetPackage) {
 		when (split[1]) {
 			"object_id" -> {
 				fs = FieldSpec.builder(ParameterizedTypeName.get(ArrayList::class.java, String::class.java), field.name, Modifier.PUBLIC).addJavadoc("\$L", "List " + EGF2Generator.getName(split[1]) + ".id")
-				if (field.default != null) fs.initializer("\$L", field.default)
-				if (field.required) fs.addAnnotation(NotNull::class.java)
-				return fs.build()
 			}
 			"struct" -> {
 				if (custom_schemas.containsKey(field.schema)) {
@@ -33,70 +29,53 @@ class ArrayMapper(targetPackage: String) : Mapper(targetPackage) {
 					val struct = ClassName.get(targetPackage + EGF2Generator.packageCommons, schema)
 					val arrayList = ClassName.get("java.util", "ArrayList")
 					fs = FieldSpec.builder(ParameterizedTypeName.get(arrayList, struct), field.name, Modifier.PUBLIC)
-					if (field.default != null) fs.initializer("\$L", field.default)
-					if (field.required) fs.addAnnotation(NotNull::class.java)
-					return fs.build()
 				} else return null
 			}
 			"string", "date" -> {
 				fs = FieldSpec.builder(ParameterizedTypeName.get(ArrayList::class.java, java.lang.String::class.java), field.name, Modifier.PUBLIC)
-				if (field.default != null) fs.initializer("\$L", field.default)
-				if (field.required) fs.addAnnotation(NotNull::class.java)
-				return fs.build()
 			}
 			"boolean" -> {
 				fs = FieldSpec.builder(ParameterizedTypeName.get(ArrayList::class.java, java.lang.Boolean::class.java), field.name, Modifier.PUBLIC)
-				if (field.default != null) fs.initializer("\$L", field.default)
-				if (field.required) fs.addAnnotation(NotNull::class.java)
-				return fs.build()
 			}
 			"number" -> {
 				fs = FieldSpec.builder(ParameterizedTypeName.get(arrayList, ClassName.get("java.lang", "Float")), field.name, Modifier.PUBLIC)
-				if (field.default != null) fs.initializer("\$L", field.default)
-				if (field.required) fs.addAnnotation(NotNull::class.java)
-				return fs.build()
 			}
 			"integer" -> {
 				fs = FieldSpec.builder(ParameterizedTypeName.get(ArrayList::class.java, java.lang.Integer::class.java), field.name, Modifier.PUBLIC)
-				if (field.default != null) fs.initializer("\$L", field.default)
-				if (field.required) fs.addAnnotation(NotNull::class.java)
-				return fs.build()
 			}
 			else -> {
 				return null
 			}
 		}
+		if (field.default != null) fs.initializer("\$L", field.default)
+		if (field.required) fs.addAnnotation(NotNull::class.java)
+		return fs.build()
 	}
 
 	override fun deserialize(field: Field, supername: String, deserialize: MethodSpec.Builder, custom_schemas: LinkedHashMap<String, LinkedList<Field>>) {
+		val arrayList = ClassName.get("java.util", "ArrayList")
 		val split = field.type.split(":")
 		when (split[1]) {
 			"string", "date" -> {
-				val arrayList = ClassName.get("java.util", "ArrayList")
 				val p = ParameterizedTypeName.get(arrayList, ClassName.get(java.lang.String::class.java))
 				deserializeType(deserialize, field, p, supername)
 			}
 			"boolean" -> {
-				val arrayList = ClassName.get("java.util", "ArrayList")
 				val b = ClassName.get("java.lang", "Boolean")
 				val p = ParameterizedTypeName.get(arrayList, b)
 				deserializeType(deserialize, field, p, supername)
 			}
 			"number" -> {
-				val arrayList = ClassName.get("java.util", "ArrayList")
 				val f = ClassName.get("java.lang", "Float")
 				val p = ParameterizedTypeName.get(arrayList, f)
 				deserializeType(deserialize, field, p, supername)
 			}
 			"integer" -> {
-				val arrayList = ClassName.get("java.util", "ArrayList")
 				val p = ParameterizedTypeName.get(arrayList, ClassName.get(java.lang.Integer::class.java))
 				deserializeType(deserialize, field, p, supername)
 			}
 			"object_id" -> {
-				val arrayList = ClassName.get("java.util", "ArrayList")
 				val cache = ClassName.get(EGF2Generator.packageFramework, "EGF2Cache")
-
 				if (field.object_types?.size == 1) {
 					if (!EGF2Generator.back_end_only.contains(field.object_types?.get(0))
 							&& !EGF2Generator.excludeModels.contains(field.object_types?.get(0))) {
@@ -155,7 +134,6 @@ class ArrayMapper(targetPackage: String) : Mapper(targetPackage) {
 				if (custom_schemas.containsKey(field.schema)) {
 					val schema = EGF2Generator.getName(field.schema, false)
 					val struct = ClassName.get(targetPackage + EGF2Generator.packageCommons, schema)
-					val arrayList = ClassName.get("java.util", "ArrayList")
 					val p = ParameterizedTypeName.get(arrayList, struct)
 					deserializeType(deserialize, field, p, supername)
 				}

@@ -2,7 +2,6 @@ package com.eigengraph.egf2.generator.mappers
 
 import com.eigengraph.egf2.generator.EGF2Generator
 import com.eigengraph.egf2.generator.Field
-import com.eigengraph.egf2.generator.Mapper
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
@@ -34,31 +33,27 @@ class StructMapper(targetPackage: String) : Mapper(targetPackage) {
 	override fun deserialize(field: Field, supername: String, deserialize: MethodSpec.Builder, custom_schemas: LinkedHashMap<String, LinkedList<Field>>) {
 		if (custom_schemas.containsKey(field.schema)) {
 			val schema = EGF2Generator.getName(field.schema, false)
-			//edge = context.deserialize(jsonObject.get("edge"), type)
 			val struct = ClassName.get(targetPackage + EGF2Generator.packageCommons, schema)
 			if (field.required) {
 				deserialize.addStatement("final \$T \$L = context.deserialize(jsonObject.get(\"\$L\"), \$T.class)", struct, field.name, field.name, struct)
 				deserialize.addStatement("\$L.\$L = \$L", supername, field.name, field.name)
-				deserialize.addCode("\n")
 			} else {
 				deserialize.beginControlFlow("if(jsonObject.has(\"\$L\"))", field.name)
 				deserialize.addStatement("final \$T \$L = context.deserialize(jsonObject.get(\"\$L\"), \$T.class)", struct, field.name, field.name, struct)
 				deserialize.addStatement("\$L.\$L = \$L", supername, field.name, field.name)
 				deserialize.endControlFlow()
-				deserialize.addCode("\n")
 			}
 		} else if (field.schema == "any") {
 			if (field.required) {
 				deserialize.addStatement("final Object \$L = context.deserialize(jsonObject.get(\"\$L\"), Object.class)", field.name, field.name)
 				deserialize.addStatement("\$L.\$L = \$L", supername, field.name, field.name)
-				deserialize.addCode("\n")
 			} else {
 				deserialize.beginControlFlow("if(jsonObject.has(\"\$L\"))", field.name)
 				deserialize.addStatement("final Object \$L = context.deserialize(jsonObject.get(\"\$L\"), Object.class)", field.name, field.name)
 				deserialize.addStatement("\$L.\$L = \$L", supername, field.name, field.name)
 				deserialize.endControlFlow()
-				deserialize.addCode("\n")
 			}
 		}
+		deserialize.addCode("\n")
 	}
 }

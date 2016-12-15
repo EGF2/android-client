@@ -2,7 +2,6 @@ package com.eigengraph.egf2.generator.mappers
 
 import com.eigengraph.egf2.generator.EGF2Generator
 import com.eigengraph.egf2.generator.Field
-import com.eigengraph.egf2.generator.Mapper
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
