@@ -15,21 +15,18 @@ buildscript {
     ext.minSdk = 16
     ext.targetSdk = 25
     ext.versionCode = 1
-    ext.versionName = "1.0.0"
+    ext.versionName = "1.0.1"
     ext.group = "com.eigengraph.egf2"
 
     repositories {
         mavenCentral()
         jcenter()
-        maven {
-            url uri('repo')
-        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
-        classpath 'com.eigengraph.egf2:gradle-plugin:1.0.0'
+        //classpath "com.eigengraph.egf2:gradle-plugin:$versionName"
         classpath "io.realm:realm-gradle-plugin:2.2.1"
         classpath "com.github.ben-manes:gradle-versions-plugin:0.13.0"
 
