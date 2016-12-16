@@ -293,7 +293,7 @@ object EGF2 {
 		private var max_count = DEF_COUNT
 		private var token: String? = null
 		private var mapTypes: HashMap<String, Type> = HashMap()
-		private var debugMode: Boolean = false
+		private var debug: Boolean = false
 
 		fun build() {
 			EGF2Api.baseUrl = baseUrl
@@ -305,7 +305,7 @@ object EGF2 {
 			MAX_COUNT = max_count
 			DEF_COUNT = def_count
 
-			EGF2.debugMode = debugMode
+			EGF2.debugMode = debug
 
 			mapClassTypes = mapTypes
 			mapClassTypes.put(EGF2Model::class.java.simpleName, object : TypeToken<EGF2Edge<EGF2Model>>() {}.type)
@@ -379,7 +379,7 @@ object EGF2 {
 		}
 
 		fun debug(value: Boolean): Builder {
-			debugMode = value
+			debug = value
 			return this
 		}
 	}
@@ -393,4 +393,18 @@ object EGF2 {
 	}
 
 	fun isLoggedIn() = EGF2Api.headers.containsKey("Authorization") && EGF2Api.headers["Authorization"]?.isNotEmpty() as Boolean
+
+	fun isFirstPage(edge: EGF2Edge<out EGF2Model>) =
+			when (EGF2.paginationMode) {
+				EGF2.PAGINATION_MODE.INDEX -> {
+					if (edge.first == "0") true
+					else false
+				}
+				EGF2.PAGINATION_MODE.OBJECT -> {
+					if (edge.count > 0 && edge.first == edge.results[0].getId()) true
+					else if (edge.count == 0 && edge.first == null) true
+					else false
+				}
+				else -> false
+			}
 }
