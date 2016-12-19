@@ -18,7 +18,7 @@ internal interface EGF2AuthService {
 	fun verifyEmail(@Query("token") token: String): Observable<Response<Any>>
 
 	@GET("logout")
-	fun logout(): Observable<Response<Any>>
+	fun logout(): Observable<Response<Void>>
 
 	@GET("forgot_password")
 	fun forgotPassword(@Query("email") email: String): Observable<Response<Any>>
