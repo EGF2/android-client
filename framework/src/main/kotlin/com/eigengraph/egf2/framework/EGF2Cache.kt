@@ -109,13 +109,11 @@ object EGF2Cache {
 					if (listId.size != count && ed.size < edgeCount) {
 						it.onNext(null)
 					} else {
-						val r = realm.where(objectRealm::class.java)
-						listId.forEach {
-							r.equalTo("id", it).or()
-						}
+
 						val listObj = ArrayList<T>()
-						r.findAll().forEach {
-							val obj = convertFromBytes(it.body as ByteArray) as T
+						listId.forEach {
+							val r = realm.where(objectRealm::class.java).equalTo("id", it).findFirst()
+							val obj = convertFromBytes(r.body as ByteArray) as T
 							listObj.add(obj)
 						}
 
@@ -125,7 +123,7 @@ object EGF2Cache {
 
 						when (EGF2.paginationMode) {
 							EGF2.PAGINATION_MODE.INDEX -> {
-								edt.last = edt.results.size.toString()
+								edt.last = (edt.results.size - 1).toString()
 							}
 							EGF2.PAGINATION_MODE.OBJECT -> {
 								edt.last = edt.results.last().getId()
@@ -144,6 +142,7 @@ object EGF2Cache {
 		}
 	}
 
+	//TODO return true/false
 	fun <T : EGF2Model> getEdgeObject(idSrc: String, edge: String, idDst: String, normalizeExpand: String?): Observable<T?> {
 		return Observable.create {
 
@@ -187,7 +186,7 @@ object EGF2Cache {
 
 		val cache = cacheRealm()
 		cache.id = id
-		normalizeExpand?.let { cache.id + "/" + it }
+		normalizeExpand?.let { cache.id = cache.id + "/" + it }
 
 		Realm.getInstance(configDB).use {
 			it.executeTransactionAsync {
@@ -231,9 +230,10 @@ object EGF2Cache {
 
 		Realm.getInstance(configDB).use {
 			it.executeTransactionAsync {
-				if (edge.first == null) {
+				if (EGF2.isFirstPage(edge)) {
 					it.where(edgeRealm::class.java).equalTo("id_src", id).equalTo("edge", edgeName).findAll().deleteAllFromRealm()
 				}
+
 				it.insertOrUpdate(listObj)
 				it.insert(listEdge)
 				it.insertOrUpdate(cache)
