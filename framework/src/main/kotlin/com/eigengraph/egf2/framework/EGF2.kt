@@ -69,7 +69,8 @@ object EGF2 {
 			.observeOn(AndroidSchedulers.mainThread())
 
 	fun logout() = auth.logout()
-			.doOnCompleted { clearCache() }
+			.doOnNext { clearCache() }
+			.doOnError { clearCache() }
 			.subscribeOn(Schedulers.io())
 			.observeOn(AndroidSchedulers.mainThread())
 
