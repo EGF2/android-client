@@ -6,7 +6,6 @@ import com.eigengraph.egf2.framework.models.EGF2Search
 import com.eigengraph.egf2.framework.util.HttpHeaderInterceptor
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import com.google.gson.reflect.TypeToken
 import okhttp3.RequestBody
 import retrofit2.Response
 import rx.Observable
@@ -243,14 +242,24 @@ internal class EGF2GraphApi : EGF2Api() {
 		return requestSubject.asObservable()
 	}
 
-	internal fun <T : EGF2Model> search(param: HashMap<String, Any>): Observable<EGF2Search<T>> =
+	internal fun <T : EGF2Model> search(param: HashMap<String, Any>, clazz: Class<T>): Observable<EGF2Search<T>> =
 			service.search(param)
 					.flatMap {
 						if (it.isSuccessful) {
-							val type: Type = object : TypeToken<EGF2Search<T>>() {}.type
-							val json = it.body()?.toString()
-							val e: EGF2Search<T> = EGF2Api.gson.fromJson(json, type)
-							Observable.just(e)
+							val type: Type? = EGF2.mapClassTypes[clazz.simpleName]
+							if (type != null) {
+								val json = it.body()?.toString()
+								val e: EGF2Edge<T> = EGF2Api.gson.fromJson(json, type)
+								val s: EGF2Search<T> = EGF2Search()
+								s.count = e.count
+								s.first = e.first
+								s.last = e.last
+								s.results = e.results
+								Observable.just(s)
+							} else {
+								//TODO
+								Observable.error(Throwable(clazz.simpleName + " Type Not Found"))
+							}
 						} else {
 							Observable.error(onError2(it))
 						}

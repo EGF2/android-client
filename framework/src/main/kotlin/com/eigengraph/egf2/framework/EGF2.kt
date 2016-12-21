@@ -194,7 +194,7 @@ object EGF2 {
 					.observeOn(AndroidSchedulers.mainThread())
 
 
-	fun <T : EGF2Model> search(q: String, `object`: String, fields: String, filters: String, sort: String, range: String, expand: String): Observable<EGF2Search<T>> {
+	fun <T : EGF2Model> search(q: String, `object`: String, fields: String, filters: String, sort: String, range: String, expand: String, clazz: Class<T>): Observable<EGF2Search<T>> {
 		val param = HashMap<String, Any>()
 		if (q.isNotEmpty()) param.put("q", q)
 		if (`object`.isNotEmpty()) param.put("object", `object`)
@@ -204,7 +204,7 @@ object EGF2 {
 		if (range.isNotEmpty()) param.put("range", range)
 		if (expand.isNotEmpty()) param.put("expand", expand)
 
-		return graph.search<T>(param)
+		return graph.search<T>(param, clazz)
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 	}
