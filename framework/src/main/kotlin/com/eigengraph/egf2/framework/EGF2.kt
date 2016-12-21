@@ -194,9 +194,11 @@ object EGF2 {
 					.observeOn(AndroidSchedulers.mainThread())
 
 
-	fun <T : EGF2Model> search(q: String, `object`: String, fields: String, filters: String, sort: String, range: String, expand: String, clazz: Class<T>): Observable<EGF2Search<T>> {
+	fun <T : EGF2Model> search(q: String, after: String, count: Int, `object`: String, fields: String, filters: String, sort: String, range: String, expand: String, clazz: Class<T>): Observable<EGF2Search<T>> {
 		val param = HashMap<String, Any>()
 		if (q.isNotEmpty()) param.put("q", q)
+		if (after.isNotEmpty()) param.put("after", after)
+		param.put("count", count)
 		if (`object`.isNotEmpty()) param.put("object", `object`)
 		if (fields.isNotEmpty()) param.put("fields", fields)
 		if (filters.isNotEmpty()) param.put("filters", filters)

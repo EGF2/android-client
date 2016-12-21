@@ -266,10 +266,11 @@ object EGF2Cache {
 			val cache2 = cacheRealm()
 			cache2.id = obj.getId()
 
+			val cacheOld = it.where(cacheRealm::class.java).equalTo("id", idSrc + "/" + edge).findFirst()
 			val cache = cacheRealm()
 			cache.id = idSrc + "/" + edge
 			cache.after = ""
-			cache.count = 1
+			cache.count = cacheOld.count + 1
 
 			val e = edgeRealm()
 			e.edge = edge
@@ -277,7 +278,7 @@ object EGF2Cache {
 			e.id_src = idSrc
 			e.id_dst = obj.getId()
 
-			val ec = it.where(edgeCountRealm::class.java).equalTo("id", obj.getId() + "/" + edge).findFirst()
+			val ec = it.where(edgeCountRealm::class.java).equalTo("id", idSrc + "/" + edge).findFirst()
 			if (ec == null) {
 				val edgeCount = edgeCountRealm()
 				edgeCount.id = idSrc + "/" + edge
@@ -291,9 +292,13 @@ object EGF2Cache {
 					it.copyToRealmOrUpdate(cache)
 				}
 			} else {
-				ec.count++
+
+				val edgeCount = edgeCountRealm()
+				edgeCount.id = idSrc + "/" + edge
+				edgeCount.count = ec.count + 1
 
 				it.executeTransaction {
+					it.copyToRealmOrUpdate(edgeCount)
 					it.copyToRealmOrUpdate(ec)
 					it.where(cacheRealm::class.java)
 							.beginsWith("id", obj.getId())
@@ -304,7 +309,7 @@ object EGF2Cache {
 					it.copyToRealmOrUpdate(cache)
 
 					it.where(edgeRealm::class.java)
-							.equalTo("id_src", idSrc).equalTo("edge", edge).equalTo("id_dst", obj.getId())
+							.equalTo("id_src", idSrc).equalTo("edge", edge)
 							.findAll().forEach {
 						it.index++
 					}
@@ -328,14 +333,14 @@ object EGF2Cache {
 
 				var flag = false
 				it.where(edgeRealm::class.java)
-						.equalTo("id_src", idSrc).equalTo("edge", edge).equalTo("id_dst", idDst)
+						.equalTo("id_src", idSrc).equalTo("edge", edge)
 						.findAll().forEach {
 					if (flag) it.index--
 					if (it.id_dst == idDst) flag = true
 				}
 
 				it.where(edgeRealm::class.java)
-						.equalTo("id_src", idSrc).equalTo("edge", edge).equalTo("id_dst", idDst)
+						.equalTo("id_src", idSrc).equalTo("edge", edge)
 						.findAll().deleteAllFromRealm()
 			}
 			it.close()
