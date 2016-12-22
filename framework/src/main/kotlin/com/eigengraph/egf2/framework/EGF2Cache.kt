@@ -79,7 +79,8 @@ object EGF2Cache {
 			val realm = Realm.getInstance(configDB)
 			try {
 				//TODO fix get cache with filter by normalizeExpand
-				val i = id + "/" + edge + normalizeExpand?.let { "/" + it }
+				var i = id + "/" + edge
+				normalizeExpand?.let { i += "/" + it }
 				val cache = realm.where(cacheRealm::class.java).equalTo("id", i).findFirst()
 
 				if (cache == null) {
