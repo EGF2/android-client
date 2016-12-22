@@ -321,7 +321,7 @@ object EGF2Cache {
 
 	fun deleteObjectOnEdge(idSrc: String, edge: String, idDst: String) {
 		Realm.getInstance(configDB).use {
-			val ec = it.where(edgeCountRealm::class.java).equalTo("id", idDst + "/" + edge).findFirst()
+			val ec = it.where(edgeCountRealm::class.java).equalTo("id", idSrc + "/" + edge).findFirst()
 			it.executeTransaction {
 				it.where(objectRealm::class.java)
 						.equalTo("id", idDst)
