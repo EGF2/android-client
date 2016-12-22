@@ -15,7 +15,7 @@ buildscript {
     ext.minSdk = 16
     ext.targetSdk = 25
     ext.versionCode = 1
-    ext.versionName = "1.0.1"
+    ext.versionName = "1.0.2"
     ext.group = "com.eigengraph.egf2"
 
     repositories {
@@ -39,6 +39,9 @@ allprojects {
     repositories {
         mavenCentral()
         jcenter()
+        maven {
+            url "https://dl.bintray.com/dmitry-shingarev/egf2-android-client"
+        }
     }
 }
 

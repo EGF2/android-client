@@ -21,14 +21,14 @@ bintray {
         name = bintrayName
         desc = libraryDescription
         websiteUrl = siteUrl
-        issueTrackerUrl = siteUrl+'/issues'
+        issueTrackerUrl = siteUrl + '/issues'
         vcsUrl = gitUrl
         licenses = allLicenses
         //githubRepo = githubRepository //Optional Github repository
         //githubReleaseNotesFile = 'README.md' //Optional Github readme file
         publish = true
         publicDownloadNumbers = true
-        override = true
+        override = false
         version {
             desc = libraryDescription
             //gpg {

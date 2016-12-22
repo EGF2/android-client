@@ -35,6 +35,9 @@ ext {
 buildscript {
     repositories {
         mavenCentral()
+        maven {
+            url uri('../repo')
+        }
     }
 
     dependencies {
@@ -104,6 +107,7 @@ task wrapper(type: Wrapper, description: 'Generates the com.eigengraph.egf2.grad
     gradleVersion = '2.14.1'
 }
 
+/*
 uploadArchives {
     repositories {
         mavenDeployer {
@@ -111,10 +115,12 @@ uploadArchives {
         }
     }
 }
+*/
 
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
 }
+
 
 apply from: '../install.gradle'
 apply from: '../bintray.gradle'

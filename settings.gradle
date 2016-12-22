@@ -1,4 +1,4 @@
-//include ':app'
+include ':app'
 include ':framework'
 include ':egf2-generator'
 include ':gradle-plugin'

@@ -43,20 +43,20 @@ bintray {
         name = bintrayName
         desc = libraryDescription
         websiteUrl = siteUrl
-        issueTrackerUrl = siteUrl+'/issues'
+        issueTrackerUrl = siteUrl + '/issues'
         vcsUrl = gitUrl
         licenses = allLicenses
         //githubRepo = githubRepository //Optional Github repository
         //githubReleaseNotesFile = 'README.md' //Optional Github readme file
         publish = true
         publicDownloadNumbers = true
-        override = true
+        override = false
         version {
             desc = libraryDescription
             //gpg {
-                //sign = true //Determines whether to GPG sign the files. The default is false
-                //passphrase = properties.getProperty("bintray.gpg.password")
-                //Optional. The passphrase for GPG signing'
+            //sign = true //Determines whether to GPG sign the files. The default is false
+            //passphrase = properties.getProperty("bintray.gpg.password")
+            //Optional. The passphrase for GPG signing'
             //}
         }
     }

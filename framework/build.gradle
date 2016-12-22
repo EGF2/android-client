@@ -87,12 +87,14 @@ dependencies {
         }
     }
 }*/
+
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
     options.addStringOption('encoding', 'UTF-8')
     options.addStringOption('charSet', 'UTF-8')
     failOnError false
 }
+
 
 apply from: '../installFramework.gradle'
 apply from: '../bintrayFramework.gradle'
