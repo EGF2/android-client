@@ -65,7 +65,7 @@ object EGF2Cache {
 					}
 				}
 			} catch (e: Exception) {
-				it.onError(e)
+				it.onNext(null)
 			} finally {
 				realm.close()
 				it.onCompleted()
@@ -135,7 +135,7 @@ object EGF2Cache {
 					}
 				}
 			} catch (e: Exception) {
-				it.onError(e)
+				it.onNext(null)
 			} finally {
 				realm.close()
 				it.onCompleted()
@@ -172,7 +172,7 @@ object EGF2Cache {
 					}
 				}
 			} catch (e: Exception) {
-				it.onError(e)
+				it.onNext(null)
 			} finally {
 				realm.close()
 				it.onCompleted()
