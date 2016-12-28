@@ -8,7 +8,6 @@ import com.google.gson.JsonObject
 import retrofit2.Response
 import rx.Observable
 import rx.schedulers.Schedulers
-import rx.subjects.BehaviorSubject
 
 data class RegisterModel(@JvmField val first_name: String,
                          @JvmField val last_name: String,
@@ -71,114 +70,72 @@ internal class EGF2AuthApi : EGF2Api() {
 					}
 					.subscribeOn(Schedulers.io())
 
-	internal fun verifyEmail(token: String): Observable<Any> {
-		val subject = BehaviorSubject.create<Any>()
-
+	internal fun verifyEmail(token: String): Observable<Any> =
 		service.verifyEmail(token)
-				.subscribeOn(Schedulers.io())
-				.subscribe({
+				.flatMap {
 					if (it.isSuccessful) {
-						subject.onNext(it)
+						Observable.just(it)
 					} else {
 						onError(it)
 					}
-				}, {
-					subject.onError(it)
-				})
-
-		return subject
-	}
-
-	internal fun logout(): Observable<Any> {
-		val subject = BehaviorSubject.create<Any>()
-
-		service.logout()
+				}
 				.subscribeOn(Schedulers.io())
-				.subscribe({
+
+	internal fun logout(): Observable<Any> =
+			service.logout()
+					.flatMap {
 					if (it.isSuccessful) {
 						removeHeader("Authorization")
-						subject.onNext(it)
+						Observable.just(it)
 					} else {
 						onError(it)
 					}
-				}, {
-					subject.onError(it)
-				})
-
-		return subject
-	}
-
-	internal fun forgotPassword(email: String): Observable<Any> {
-		val subject = BehaviorSubject.create<Any>()
-
-		service.forgotPassword(email)
+					}
 				.subscribeOn(Schedulers.io())
-				.subscribe({
+
+	internal fun forgotPassword(email: String): Observable<Any> =
+			service.forgotPassword(email)
+					.flatMap {
 					if (it.isSuccessful) {
-						subject.onNext(it)
+						Observable.just(it)
 					} else {
 						onError(it)
 					}
-				}, {
-					subject.onError(it)
-				})
-
-		return subject
-	}
-
-	internal fun resetPassword(body: ResetPasswordModel): Observable<Any> {
-		val subject = BehaviorSubject.create<Any>()
-
-		service.resetPassword(body)
+					}
 				.subscribeOn(Schedulers.io())
-				.subscribe({
+
+	internal fun resetPassword(body: ResetPasswordModel): Observable<Any> =
+			service.resetPassword(body)
+					.flatMap {
 					if (it.isSuccessful) {
-						subject.onNext(it)
+						Observable.just(it)
 					} else {
 						onError(it)
 					}
-				}, {
-					subject.onError(it)
-				})
-
-		return subject
-	}
-
-	internal fun changePassword(body: ChangePasswordModel): Observable<Any> {
-		val subject = BehaviorSubject.create<Any>()
-
-		service.changePassword(body)
+					}
 				.subscribeOn(Schedulers.io())
-				.subscribe({
+
+	internal fun changePassword(body: ChangePasswordModel): Observable<Any> =
+			service.changePassword(body)
+					.flatMap {
 					if (it.isSuccessful) {
-						subject.onNext(it)
+						Observable.just(it)
 					} else {
 						onError(it)
 					}
-				}, {
-					subject.onError(it)
-				})
-
-		return subject
-	}
-
-	internal fun resendEmailVerification(): Observable<Any> {
-		val subject = BehaviorSubject.create<Any>()
-
-		service.resendEmailVerification()
+					}
 				.subscribeOn(Schedulers.io())
-				.subscribe({
+
+	internal fun resendEmailVerification(): Observable<Any> =
+			service.resendEmailVerification()
+					.flatMap {
 					if (it.isSuccessful) {
-						subject.onNext(it)
+						Observable.just(it)
 					} else {
 						onError(it)
 					}
-				}, {
-					subject.onError(it)
-				})
-
-		return subject
-	}
+					}
+					.subscribeOn(Schedulers.io())
 
 	private fun onError(it: Response<*>): Observable<String>? =
 			if (it.errorBody() != null) {
