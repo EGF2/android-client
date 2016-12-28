@@ -270,8 +270,14 @@ object EGF2Cache {
 			val cacheOld = it.where(cacheRealm::class.java).equalTo("id", idSrc + "/" + edge).findFirst()
 			val cache = cacheRealm()
 			cache.id = idSrc + "/" + edge
-			cache.after = ""
-			cache.count = cacheOld.count + 1
+
+			if (cacheOld != null) {
+				cache.after = cacheOld.after
+				cache.count = cacheOld.count + 1
+			} else {
+				cache.after = ""
+				cache.count = 1
+			}
 
 			val e = edgeRealm()
 			e.edge = edge
