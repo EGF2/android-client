@@ -122,14 +122,21 @@ object EGF2Cache {
 						edt.results = listObj
 						edt.count = edgeCount
 
+
 						when (EGF2.paginationMode) {
 							EGF2.PAGINATION_MODE.INDEX -> {
-								edt.last = (edt.results.size - 1).toString()
+								if (edgeCount > edt.results.size) {
+									edt.last = (edt.results.size - 1).toString()
+								}
+								edt.first = ed.first().index.toString()
 							}
 							EGF2.PAGINATION_MODE.OBJECT -> {
-								edt.last = edt.results.last().getId()
+								if (edgeCount > edt.results.size) {
+									edt.last = edt.results.last().getId()
+								}
+								edt.first = ed.first().id_dst
 							}
-						}
+							}
 
 						it.onNext(edt)
 					}
