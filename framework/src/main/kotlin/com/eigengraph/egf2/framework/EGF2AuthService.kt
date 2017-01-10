@@ -30,5 +30,5 @@ internal interface EGF2AuthService {
 	fun changePassword(@Body body: Any): Observable<Response<Any>>
 
 	@POST("resend_email_verification")
-	fun resendEmailVerification(): Observable<Response<Any>>
+	fun resendEmailVerification(): Observable<Response<Void>>
 }
