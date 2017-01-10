@@ -86,21 +86,24 @@ object EGF2Cache {
 				if (cache == null) {
 					it.onNext(null)
 				} else {
-
 					val listId = ArrayList<String>()
 					var flag = false
 					var idx = 0
 					val ed = realm.where(edgeRealm::class.java).equalTo("id_src", id).equalTo("edge", edge).findAllSorted("index", Sort.ASCENDING)
-					ed.forEach {
+					var first = -1
+					var last = -1
+					ed.forEachIndexed { i, edgeRealm ->
 						when (EGF2.paginationMode) {
 							EGF2.PAGINATION_MODE.INDEX,
 							EGF2.PAGINATION_MODE.OBJECT -> {
 								if (after == null) flag = true
 								if (flag && idx < count) {
-									listId.add(it.id_dst)
+									listId.add(edgeRealm.id_dst)
 									idx++
+									if (first < 0) first = i
+									last = i
 								}
-								if (after != null && it.id_dst == after.getId()) flag = true
+								if (after != null && edgeRealm.id_dst == after.getId()) flag = true
 							}
 						}
 					}
@@ -122,22 +125,20 @@ object EGF2Cache {
 						edt.results = listObj
 						edt.count = edgeCount
 
-
 						when (EGF2.paginationMode) {
 							EGF2.PAGINATION_MODE.INDEX -> {
-								if (edgeCount > edt.results.size) {
-									edt.last = (edt.results.size - 1).toString()
+								if (edgeCount > last + 1) {
+									edt.last = last.toString()//(edt.results.size - 1).toString()
 								}
-								edt.first = ed.first().index.toString()
+								edt.first = first.toString()//ed.first().index.toString()
 							}
 							EGF2.PAGINATION_MODE.OBJECT -> {
-								if (edgeCount > edt.results.size) {
+								if (edgeCount > last + 1) {
 									edt.last = edt.results.last().getId()
 								}
 								edt.first = ed.first().id_dst
 							}
-							}
-
+						}
 						it.onNext(edt)
 					}
 				}
@@ -207,38 +208,45 @@ object EGF2Cache {
 
 	fun addEdge(id: String, edgeName: String, edge: EGF2Edge<out EGF2Model>, normalizeExpand: String? = null) {
 
-		val edgeCount = edgeCountRealm()
-		edgeCount.id = id + "/" + edgeName
-		edgeCount.count = edge.count
-
-		val cache = cacheRealm()
-		cache.id = id + "/" + edgeName
-		cache.after = ""
-		cache.count = edge.results.size
-		normalizeExpand?.let { cache.id = cache.id + "/" + it }
-
-		val listObj = ArrayList<objectRealm>()
-		val listEdge = ArrayList<edgeRealm>()
-
-		edge.results.forEachIndexed { i, egfModel ->
-			val obj = objectRealm()
-			val e = edgeRealm()
-
-			e.edge = edgeName
-			e.index = i
-			e.id_src = id
-			e.id_dst = egfModel.getId()
-
-			obj.id = egfModel.getId()
-			obj.body = convertToBytes(egfModel)
-
-			listEdge.add(e)
-			listObj.add(obj)
-		}
-
+		val firstPage = EGF2.isFirstPage(edge)
 		Realm.getInstance(configDB).use {
 			it.executeTransactionAsync {
-				if (EGF2.isFirstPage(edge)) {
+				val edgeCount = edgeCountRealm()
+				edgeCount.id = id + "/" + edgeName
+				edgeCount.count = edge.count
+
+				val cache = cacheRealm()
+				cache.id = id + "/" + edgeName
+				cache.after = ""
+				cache.count = edge.results.size
+				normalizeExpand?.let { cache.id = cache.id + "/" + it }
+
+				val listObj = ArrayList<objectRealm>()
+				val listEdge = ArrayList<edgeRealm>()
+
+				var last = 0
+				if (!firstPage) {
+					val ed = it.where(edgeRealm::class.java).equalTo("id_src", id).equalTo("edge", edgeName).findAllSorted("index", Sort.ASCENDING)
+					last = ed.last().index + 1
+				}
+
+				edge.results.forEachIndexed { i, egfModel ->
+					val obj = objectRealm()
+					val e = edgeRealm()
+
+					e.edge = edgeName
+					e.index = i + last
+					e.id_src = id
+					e.id_dst = egfModel.getId()
+
+					obj.id = egfModel.getId()
+					obj.body = convertToBytes(egfModel)
+
+					listEdge.add(e)
+					listObj.add(obj)
+				}
+
+				if (firstPage) {
 					it.where(edgeRealm::class.java).equalTo("id_src", id).equalTo("edge", edgeName).findAll().deleteAllFromRealm()
 				}
 
